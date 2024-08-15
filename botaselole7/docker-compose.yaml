@@ -1,0 +1,47 @@
+version: '3.9'
+
+services:
+  flask_app:
+    build:
+      context: .
+      dockerfile: Dockerfile.flask
+    container_name: flask_app
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongo
+    environment:
+      - FLASK_ENV=development
+      - MONGO_URI=mongodb://mongo:27017/taskdb
+    networks:
+      - app-network
+    restart: always
+
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.bot
+    container_name: bot
+    depends_on:
+      - flask_app
+    command: ["python", "bot.py"]
+    networks:
+      - app-network
+    restart: always
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - "1111:27017"  # Gunakan port default MongoDB untuk akses eksternal
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - app-network
+    restart: always
+
+volumes:
+  mongo-data:
+
+networks:
+  app-network:
